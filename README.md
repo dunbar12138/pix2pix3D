@@ -75,9 +75,30 @@ You can render a video result based on a specified input label map.
 python applications/generate_video.py --network <network_pkl> --outdir <output_dir> --random_seed <random_seeds list, e.g. 0 1> --cfg <configs, e.g., seg2cat, seg2face, edge2car> --input <input label map>
 ```
 
-#### Interpolation
+For example:
+| Input Label Map  | Generated Image | Generated Label Map |
+| ------------- | ------------- | -------- |
+| <img src="assets/seg2cat_1666_input.png"  width="256" />  | <img src="assets/seg2cat_1.gif"  width="256" />  | <img src="assets/seg2cat_1_label.gif"  width="256" /> |
+
+You can get the results above by running:
+```
+python applications/generate_video.py --network checkpoints/pix2pix3d_seg2car.pkl --outdir examples --random_seed 1 --cfg seg2cat --input examples/example_input.png
+```
 
 #### Extract Semantic Mesh
+You can also extract the mesh and color it using 3D semantic labels. Some extra packages (`pyrender`, `trimesh`, and `mcubes`) are required for mesh extraction. You can install them by `pip`. The extracted mesh will be saved as `semantic_mesh.ply`.
+
+For example:
+| Input Label Map  | Semantic Mesh | 
+| ------------- | ------------- | 
+| <img src="assets/seg2cat_1666_input.png"  width="256" />  | <img src="assets/rendered_mesh_colored.gif"  width="256" />  |
+
+You can get the results above by running:
+```
+python applications/extract_mesh.py --network checkpoints/pix2pix3d_seg2car.pkl --outdir examples --cfg seg2cat --input examples/example_input.png
+```
+
+<!-- #### Interpolation -->
 
 #### Interactive Demo (Code coming soon)
 

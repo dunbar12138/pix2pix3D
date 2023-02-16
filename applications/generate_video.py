@@ -73,7 +73,7 @@ def main():
     parser.add_argument('--network', help='Path to the network pickle file', required=True)
     parser.add_argument('--outdir', help='Directory to save the output', required=True)
     # Define an argument of a list of random seeds
-    parser.add_argument('--random_seed', help='Random seed', type=list, default=[0])
+    parser.add_argument('--random_seed', help='Random seed', nargs="+", type=int)
 
     parser.add_argument('--input_id', type=int, default=0, help='Input label map id', required=False)
     parser.add_argument('--data_dir', default='data/', help='Directory to the data', required=False)
@@ -110,6 +110,9 @@ def main():
         input_label = np.array(input_label).astype(np.uint8)
         input_label = torch.from_numpy(input_label).unsqueeze(0).unsqueeze(0).to(device)
         input_pose = forward_pose.to(device)
+
+         # Save the visualized input label map
+        PIL.Image.fromarray(color_mask(input_label[0,0].cpu().numpy()).astype(np.uint8)).save(save_dir / f'{args.cfg}_input.png')        
     elif args.input_id is not None:
         # Initialize dataset.
         data_path = Path(args.data_dir) / 'afhq_v2_train_cat_512.zip'
@@ -138,8 +141,8 @@ def main():
         frames, frames_label = render_video(G, ws, intrinsics, num_frames = 120, pitch_range = 0.25, yaw_range = 0.35, neural_rendering_resolution=neural_rendering_resolution, device=device)
 
         # Save the video
-        imageio.mimsave(save_dir / f'{args.cfg}_{args.input_id}_{seed}.mp4', frames, fps=60)
-        imageio.mimsave(save_dir / f'{args.cfg}_{args.input_id}_{seed}_label.mp4', frames_label, fps=60)
+        imageio.mimsave(save_dir / f'{args.cfg}_{seed}.gif', frames, fps=60)
+        imageio.mimsave(save_dir / f'{args.cfg}_{seed}_label.gif', frames_label, fps=60)
 
 
 
