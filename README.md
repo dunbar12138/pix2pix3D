@@ -83,18 +83,13 @@ python applications/generate_video.py --network <network_pkl> --outdir <output_d
 
 You can also launch an interactive demo of 3D editing. We provide 2 examples below:
 
-<center>
-  <video controls="" playsinline="" width="720">
-      <source src="assets/demo.mp4" type="video/mp4">
-  </video>
-</center>
-
-
+https://user-images.githubusercontent.com/28395429/219509580-650c19d1-0c63-4811-b492-e106ca3a9478.mp4
 
 
 ### Training
 
 Code coming Soon.
+
 
 ---
 
