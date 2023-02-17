@@ -1,12 +1,12 @@
+
+
 # 3D-aware Conditional Image Synthesis (pix2pix3D)
 
 [**Project**](https://www.cs.cmu.edu/~pix2pix3D/) | [**Paper**](https://arxiv.org/abs/2302.08509)
 
-This is the official implementation of "3D-aware Conditional Image Synthesis". Pix2pix3D synthesizes controllable photorealistic images from different viewpoints given a 2D label map, such as a segmentation or edge map. We provide an interactive demo for 3D editing of generated content.
+This is the official PyTorch implementation of "3D-aware Conditional Image Synthesis". Pix2pix3D synthesizes 3D objects (neural fields) given a 2D label map, such as a segmentation or edge map. We also provide an interactive 3D editing demo. 
 
-<p align="center">
-  <img src="assets/teaser_gif.gif"  width="720" />
-</p>
+https://user-images.githubusercontent.com/28395429/219509580-650c19d1-0c63-4811-b492-e106ca3a9478.mp4
 
 [3D-aware Conditional Image Synthesis](https://arxiv.org/abs/2302.08509)
 
@@ -53,6 +53,10 @@ bash checkpoints/download_models.sh
 ### Inference
 
 We provide several scripts to generate the results once you have your pre-trained models downloaded.
+
+<p align="center">
+<img src="assets/teaser_gif.gif" width="720" />
+</p>
 
 #### Generate Samples
 You can generate results based on the samples in the dataset.
@@ -105,7 +109,6 @@ python applications/extract_mesh.py --network checkpoints/pix2pix3d_seg2car.pkl 
 
 You can also launch an interactive demo of 3D editing. We provide 2 examples below:
 
-https://user-images.githubusercontent.com/28395429/219509580-650c19d1-0c63-4811-b492-e106ca3a9478.mp4
 
 
 ### Training
