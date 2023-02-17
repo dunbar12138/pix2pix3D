@@ -1,14 +1,14 @@
 # 3D-aware Conditional Image Synthesis (pix2pix3D)
 
-[**Project**](https://www.cs.cmu.edu/~pix2pix3D/) | [**Paper**]()
+[**Project**](https://www.cs.cmu.edu/~pix2pix3D/) | [**Paper**](https://arxiv.org/abs/2302.08509)
 
 This is the official implementation of "3D-aware Conditional Image Synthesis". Pix2pix3D synthesizes controllable photorealistic images from different viewpoints given a 2D label map, such as a segmentation or edge map. We provide an interactive demo for 3D editing of generated content.
 
 <p align="center">
-  <img src="assets/teaser_png.png"  width="720" />
+  <img src="assets/teaser_gif.gif"  width="720" />
 </p>
 
-[3D-aware Conditional Image Synthesis]()
+[3D-aware Conditional Image Synthesis](https://arxiv.org/abs/2302.08509)
 
 ArXiv, 2023
 
@@ -24,14 +24,14 @@ Carnegie Mellon University
 We propose pix2pix3D, a 3D-aware conditional generative model for controllable photorealistic image synthesis. Given a 2D label map, such as a segmentation or edge map, our model learns to synthesize a corresponding image from different viewpoints. To enable explicit 3D user control, we extend conditional generative models with neural radiance fields. Given widely-available monocular images and label map pairs, our model learns to assign a label to every 3D point in addition to color and density, which enables it to render the image and pixel-aligned label map simultaneously. Finally, we build an interactive system that allows users to edit the label map from any viewpoint and generate outputs accordingly.
 
 <p align="center">
-  <img src="assets/teaser_gif.gif"  width="720" />
+  <img src="assets/teaser_jpg.jpg"  width="720" />
 </p>
 
 ## Getting Started
 
 ### Dependencies
 
-We provide a conda env file that contains all the required dependencies. You can use the following commands with Miniconda3 to create and activate your Python environment:
+We provide a conda env file that contains all the other dependencies. You can use the following commands with Miniconda3 to create and activate your Python environment:
 ```
 conda env create -f environment.yml
 conda activate pix2pix3d
@@ -49,6 +49,7 @@ You can download our pre-trained models using the following script:
 bash checkpoints/download_models.sh
 ```
 
+---
 ### Inference
 
 We provide several scripts to generate the results once you have your pre-trained models downloaded.
