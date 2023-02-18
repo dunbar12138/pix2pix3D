@@ -39,7 +39,7 @@ conda activate pix2pix3d
 
 ### Data
 
-We provide our preprocessed datasets including segmentation maps and edge maps. You can download the [CelebAMask](https://drive.google.com/drive/folders/1mC6i4YmdpazJSmXrW8WFSfsImAJ8a_CF?usp=sharing) dataset, [AFHQ-Cat-Seg](https://drive.google.com/drive/folders/1yjTTE57P9-hEe-IVcE-GXdh04WGo5lD9?usp=sharing) dataset, and [Shapenet-Car-Edge](https://drive.google.com/drive/folders/1XTPuu784DIvk0ie094qyLrcF-v-jMe3_?usp=sharing) dataset and put those zip files under ```data/```.
+We provide our preprocessed datasets, including segmentation maps and edge maps. You can download the [CelebAMask](https://drive.google.com/drive/folders/1mC6i4YmdpazJSmXrW8WFSfsImAJ8a_CF?usp=sharing) dataset, [AFHQ-Cat-Seg](https://drive.google.com/drive/folders/1yjTTE57P9-hEe-IVcE-GXdh04WGo5lD9?usp=sharing) dataset, and [Shapenet-Car-Edge](https://drive.google.com/drive/folders/1XTPuu784DIvk0ie094qyLrcF-v-jMe3_?usp=sharing) dataset and put those zip files under ```data/```.
 
 
 ### Pre-trained Models
@@ -52,7 +52,7 @@ bash checkpoints/download_models.sh
 ---
 ### Inference
 
-We provide several scripts to generate the results once you have your pre-trained models downloaded.
+We provide several scripts to generate the results once you download the pre-trained models.
 
 <p align="center">
 <img src="assets/teaser_gif.gif" width="720" />
@@ -85,7 +85,7 @@ For example:
 | ------------- | ------------- | -------- |
 | <img src="assets/seg2cat_1666_input.png"  width="256" />  | <img src="assets/seg2cat_1.gif"  width="256" />  | <img src="assets/seg2cat_1_label.gif"  width="256" /> |
 
-You can get the results above by running:
+You can get the results above using the following command: 
 ```
 python applications/generate_video.py --network checkpoints/pix2pix3d_seg2car.pkl --outdir examples --random_seed 1 --cfg seg2cat --input examples/example_input.png
 ```
@@ -98,7 +98,7 @@ For example:
 | ------------- | ------------- | 
 | <img src="assets/seg2cat_1666_input.png"  width="256" />  | <img src="assets/rendered_mesh_colored.gif"  width="256" />  |
 
-You can get the results above by running:
+You can get the results above with the following command:
 ```
 python applications/extract_mesh.py --network checkpoints/pix2pix3d_seg2car.pkl --outdir examples --cfg seg2cat --input examples/example_input.png
 ```
@@ -107,13 +107,13 @@ python applications/extract_mesh.py --network checkpoints/pix2pix3d_seg2car.pkl 
 
 #### Interactive Demo (Code coming soon)
 
-You can also launch an interactive demo of 3D editing. We provide 2 examples below:
+You can also launch an interactive demo of 3D editing. We provide two examples below:
 
 
 
 ### Training
 
-Code coming Soon.
+Code is coming soon.
 
 
 ---
