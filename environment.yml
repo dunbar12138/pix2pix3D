@@ -35,3 +35,4 @@ dependencies:
     - psutil
     - mrcfile
     - tensorboard
+    - einops
