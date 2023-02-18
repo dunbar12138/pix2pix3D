@@ -36,3 +36,4 @@ dependencies:
     - mrcfile
     - tensorboard
     - einops
+    - opencv-python
