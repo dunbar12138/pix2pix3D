@@ -107,8 +107,7 @@ python applications/extract_mesh.py --network checkpoints/pix2pix3d_seg2car.pkl 
 
 #### Interactive Demo (Code coming soon)
 
-You can also launch an interactive demo of 3D editing. We provide two examples below:
-
+You can also launch an interactive demo of 3D editing.
 
 
 ### Training
