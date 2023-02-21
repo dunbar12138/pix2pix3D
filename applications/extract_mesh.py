@@ -116,6 +116,7 @@ def main():
 
     if args.cfg == 'seg2cat' or args.cfg == 'seg2face':
         neural_rendering_resolution = 128
+        pitch_range, yaw_range = 0.25, 0.35
         data_type = 'seg'
         # Initialize pose sampler.
         forward_cam2world_pose = LookAtPoseSampler.sample(3.14/2, 3.14/2, torch.tensor(G.rendering_kwargs['avg_camera_pivot'], device=device), 
@@ -125,7 +126,14 @@ def main():
         forward_pose = torch.cat([forward_cam2world_pose.reshape(-1, 16), intrinsics.reshape(-1, 9)], 1)
     elif args.cfg == 'edge2car':
         neural_rendering_resolution = 64
+        pitch_range, yaw_range = np.pi / 2, np.pi
         data_type= 'edge'
+
+        forward_cam2world_pose = LookAtPoseSampler.sample(3.14/2, 3.14/2, torch.tensor(G.rendering_kwargs['avg_camera_pivot'], device=device), 
+                                                        radius=G.rendering_kwargs['avg_camera_radius'], device=device)
+        focal_length = 1.7074 # shapenet has higher FOV
+        intrinsics = torch.tensor([[focal_length, 0, 0.5], [0, focal_length, 0.5], [0, 0, 1]], device=device)
+        forward_pose = torch.cat([forward_cam2world_pose.reshape(-1, 16), intrinsics.reshape(-1, 9)], 1)
     else:
         print('Invalid cfg')
         return
@@ -135,28 +143,45 @@ def main():
     # Load the input label map
     if args.input is not None:
         input_label = PIL.Image.open(args.input)
-        input_label = np.array(input_label).astype(np.uint8)
-        input_label = torch.from_numpy(input_label).unsqueeze(0).unsqueeze(0).to(device)
-        input_pose = forward_pose.to(device)
+        if args.cfg == 'seg2cat' or args.cfg == 'seg2face':
+            input_label = np.array(input_label).astype(np.uint8)
+            input_label = torch.from_numpy(input_label).unsqueeze(0).unsqueeze(0).to(device)
 
-         # Save the visualized input label map
-        PIL.Image.fromarray(color_mask(input_label[0,0].cpu().numpy()).astype(np.uint8)).save(save_dir / f'{args.cfg}_input.png')        
+            # Save the visualized input label map
+            PIL.Image.fromarray(color_mask(input_label[0,0].cpu().numpy()).astype(np.uint8)).save(save_dir / f'{args.cfg}_input.png') 
+        elif args.cfg == 'edge2car':
+            input_label = np.array(input_label).astype(np.float32)[..., 0]
+            input_label = -(torch.tensor(input_label).to(torch.float32) / 127.5 - 1).unsqueeze(0).unsqueeze(0).to(device)
+        input_pose = forward_pose.to(device)
+       
     elif args.input_id is not None:
-        # Initialize dataset.
-        data_path = Path(args.data_dir) / 'afhq_v2_train_cat_512.zip'
-        mask_data = Path(args.data_dir) / 'afhqcat_seg_6c.zip'
-        # data_path = '/data2/datasets/AFHQ_eg3d/afhq_v2_train_cat_512.zip'
-        # mask_data = '/data2/datasets/AFHQ_eg3d/afhqcat_seg_6c.zip'
+        if args.cfg == 'seg2cat':
+            data_path = Path(args.data_dir) / 'afhq_v2_train_cat_512.zip'
+            mask_data = Path(args.data_dir) / 'afhqcat_seg_6c.zip'
+        elif args.cfg == 'edge2car':
+            data_path = Path(args.data_dir) / 'cars_128.zip'
+            mask_data = Path(args.data_dir) / 'shapenet_car_contour.zip'
+        elif args.cfg == 'seg2face':
+            data_path = Path(args.data_dir) / 'celebamask_test.zip'
+            mask_data = Path(args.data_dir) / 'celebamask_test_label.zip'
+
         dataset_kwargs, dataset_name = init_conditional_dataset_kwargs(str(data_path), str(mask_data), data_type)
         dataset = dnnlib.util.construct_class_by_name(**dataset_kwargs)
         batch = dataset[args.input_id]
 
+        save_dir = Path(args.outdir)
 
         # Save the input label map
-        PIL.Image.fromarray(color_mask(batch['mask'][0]).astype(np.uint8)).save(save_dir / f'{args.cfg}_{args.input_id}_input.png')
+        if args.cfg == 'seg2cat' or args.cfg == 'seg2face':
+            PIL.Image.fromarray(color_mask(batch['mask'][0]).astype(np.uint8)).save(save_dir / f'{args.cfg}_{args.input_id}_input.png')
+        elif args.cfg == 'edge2car':
+            PIL.Image.fromarray((255 - batch['mask'][0]).astype(np.uint8)).save(save_dir / f'{args.cfg}_{args.input_id}_input.png')
 
         input_pose = torch.tensor(batch['pose']).unsqueeze(0).to(device)
-        input_label = torch.tensor(batch['mask']).unsqueeze(0).to(device)
+        if args.cfg == 'seg2cat' or args.cfg == 'seg2face':
+            input_label = torch.tensor(batch['mask']).unsqueeze(0).to(device)
+        elif args.cfg == 'edge2car':
+            input_label = -(torch.tensor(batch['mask']).to(torch.float32) / 127.5 - 1).unsqueeze(0).to(device)
 
     # Generate videos
     z = torch.from_numpy(np.random.RandomState(int(0)).randn(1, G.z_dim).astype('float32')).to(device)
@@ -166,51 +191,64 @@ def main():
     
     mesh_trimesh = trimesh.Trimesh(*extract_geometry(G, ws, resolution=512, threshold=50.))
 
-    verts_np = np.array(mesh_trimesh.vertices)
-    colors = torch.zeros((verts_np.shape[0], 3), device=device)
-    semantic_colors = torch.zeros((verts_np.shape[0], 6), device=device)
-    samples_color = torch.tensor(verts_np, device=device).unsqueeze(0).float()
+    if args.cfg == 'seg2cat' or args.cfg == 'seg2face':
 
-    head = 0
-    max_batch = 10000000
-    with tqdm(total = verts_np.shape[0]) as pbar:
-        with torch.no_grad():
-            while head < verts_np.shape[0]:
-                torch.manual_seed(0)
-                out = G.sample_mixed(samples_color[:, head:head+max_batch], None, ws, truncation_psi=1, noise_mode='const')
-                # sigma = out['sigma']
-                colors[head:head+max_batch, :] = out['rgb'][0,:,:3]
-                seg = out['rgb'][0, :, 32:32+6]
-                semantic_colors[head:head+max_batch, :] = seg
-                # semantics[:, head:head+max_batch] = out['semantic']
-                head += max_batch
-                pbar.update(max_batch)
+        verts_np = np.array(mesh_trimesh.vertices)
+        colors = torch.zeros((verts_np.shape[0], 3), device=device)
+        semantic_colors = torch.zeros((verts_np.shape[0], 6), device=device)
+        samples_color = torch.tensor(verts_np, device=device).unsqueeze(0).float()
 
-    semantic_colors = torch.tensor(color_list)[torch.argmax(semantic_colors, dim=-1)]
+        head = 0
+        max_batch = 10000000
+        with tqdm(total = verts_np.shape[0]) as pbar:
+            with torch.no_grad():
+                while head < verts_np.shape[0]:
+                    torch.manual_seed(0)
+                    out = G.sample_mixed(samples_color[:, head:head+max_batch], None, ws, truncation_psi=1, noise_mode='const')
+                    # sigma = out['sigma']
+                    colors[head:head+max_batch, :] = out['rgb'][0,:,:3]
+                    seg = out['rgb'][0, :, 32:32+6]
+                    semantic_colors[head:head+max_batch, :] = seg
+                    # semantics[:, head:head+max_batch] = out['semantic']
+                    head += max_batch
+                    pbar.update(max_batch)
 
-    mesh_trimesh.visual.vertex_colors = semantic_colors.cpu().numpy().astype(np.uint8)
+        semantic_colors = torch.tensor(color_list)[torch.argmax(semantic_colors, dim=-1)]
 
-    # Save mesh.
-    mesh_trimesh.export(os.path.join(save_dir, f'semantic_mesh.ply'))
+        mesh_trimesh.visual.vertex_colors = semantic_colors.cpu().numpy().astype(np.uint8)
+
+        # Save mesh.
+        mesh_trimesh.export(os.path.join(save_dir, f'semantic_mesh.ply'))
+    elif args.cfg == 'edge2car':
+        # Save mesh.
+        mesh_trimesh.export(os.path.join(save_dir, f'{args.cfg}_mesh.ply'))
 
     mesh = pyrender.Mesh.from_trimesh(mesh_trimesh)
-    r = pyrender.OffscreenRenderer(512, 512)
-    camera = pyrender.OrthographicCamera(xmag=0.3, ymag=0.3)
     light = pyrender.SpotLight(color=np.ones(3), intensity=3.0,
-                    innerConeAngle=np.pi/4)
+                innerConeAngle=np.pi/4)
+    r = pyrender.OffscreenRenderer(512, 512)
+    if args.cfg == 'seg2cat' or args.cfg == 'seg2face':
+        camera = pyrender.OrthographicCamera(xmag=0.3, ymag=0.3)
+
+    elif args.cfg == 'edge2car':
+        camera = pyrender.OrthographicCamera(xmag=0.6, ymag=0.6)
+
 
     frames_mesh = []
     num_frames = 120
-    pitch_range = 0.25
-    yaw_range = 0.35
 
     for frame_idx in tqdm(range(num_frames)):
         scene = pyrender.Scene()
         scene.add(mesh)
 
-        camera_pose = LookAtPoseSampler.sample(3.14/2 + yaw_range * np.sin(2 * 3.14 * frame_idx / num_frames),
-                                            3.14/2 -0.05 + pitch_range * np.cos(2 * 3.14 * frame_idx / num_frames),
-                                            torch.tensor(G.rendering_kwargs['avg_camera_pivot'], device=device), radius=1, device=device)
+        if args.cfg == 'seg2cat' or args.cfg == 'seg2face':
+            camera_pose = LookAtPoseSampler.sample(3.14/2 + yaw_range * np.sin(2 * 3.14 * frame_idx / num_frames),
+                                                3.14/2 -0.05 + pitch_range * np.cos(2 * 3.14 * frame_idx / num_frames),
+                                                torch.tensor(G.rendering_kwargs['avg_camera_pivot'], device=device), radius=1, device=device)
+        elif args.cfg == 'edge2car':
+            camera_pose = LookAtPoseSampler.sample(-3.14/2 + yaw_range * np.sin(2 * 3.14 * frame_idx / num_frames),
+                                                3.14/2 -0.05 + pitch_range * np.cos(2 * 3.14 * frame_idx / num_frames),
+                                                torch.tensor(G.rendering_kwargs['avg_camera_pivot'], device=device), radius=1.2, device=device)
         camera_pose = camera_pose.reshape(4, 4).cpu().numpy().copy()
         camera_pose[:, 1] = -camera_pose[:, 1]
         camera_pose[:, 2] = -camera_pose[:, 2]
@@ -220,7 +258,7 @@ def main():
         color, depth = r.render(scene)
         frames_mesh.append(color)
 
-    imageio.mimsave(os.path.join(save_dir, f'rendered_mesh_colored.gif'), frames_mesh, fps=60)
+    imageio.mimsave(os.path.join(save_dir, f'rendered_mesh.gif'), frames_mesh, fps=60)
     r.delete()
 
 

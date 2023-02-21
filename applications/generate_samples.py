@@ -78,10 +78,16 @@ def main():
 
     # Load the input label map
     # Initialize dataset.
-    # data_path = Path(args.data_dir) / 'afhq_v2_train_cat_512.zip'
-    # mask_data = Path(args.data_dir) / 'afhqcat_seg_6c.zip'
-    data_path = '/data2/datasets/AFHQ_eg3d/afhq_v2_train_cat_512.zip'
-    mask_data = '/data2/datasets/AFHQ_eg3d/afhqcat_seg_6c_no_nose.zip'
+    if args.cfg == 'seg2cat':
+        data_path = Path(args.data_dir) / 'afhq_v2_train_cat_512.zip'
+        mask_data = Path(args.data_dir) / 'afhqcat_seg_6c.zip'
+    elif args.cfg == 'edge2car':
+        data_path = Path(args.data_dir) / 'cars_128.zip'
+        mask_data = Path(args.data_dir) / 'shapenet_car_contour.zip'
+    elif args.cfg == 'seg2face':
+        data_path = Path(args.data_dir) / 'celebamask_test.zip'
+        mask_data = Path(args.data_dir) / 'celebamask_test_label.zip'
+
     dataset_kwargs, dataset_name = init_conditional_dataset_kwargs(str(data_path), str(mask_data), data_type)
     dataset = dnnlib.util.construct_class_by_name(**dataset_kwargs)
     batch = dataset[args.input_id]
@@ -89,23 +95,32 @@ def main():
     save_dir = Path(args.outdir)
 
     # Save the input label map
-    PIL.Image.fromarray(color_mask(batch['mask'][0]).astype(np.uint8)).save(save_dir / f'{args.cfg}_{args.input_id}_input.png')
+    if args.cfg == 'seg2cat' or args.cfg == 'seg2face':
+        PIL.Image.fromarray(color_mask(batch['mask'][0]).astype(np.uint8)).save(save_dir / f'{args.cfg}_{args.input_id}_input.png')
+    elif args.cfg == 'edge2car':
+        PIL.Image.fromarray((255 - batch['mask'][0]).astype(np.uint8)).save(save_dir / f'{args.cfg}_{args.input_id}_input.png')
 
     # Generate samples
     for seed in args.random_seed:
         z = torch.from_numpy(np.random.RandomState(int(seed)).randn(1, G.z_dim).astype('float32')).to(device)
         input_pose = torch.tensor(batch['pose']).unsqueeze(0).to(device)
-        input_label = torch.tensor(batch['mask']).unsqueeze(0).to(device)
+        if args.cfg == 'seg2cat' or args.cfg == 'seg2face':
+            input_label = torch.tensor(batch['mask']).unsqueeze(0).to(device)
+        elif args.cfg == 'edge2car':
+            input_label = -(torch.tensor(batch['mask']).to(torch.float32) / 127.5 - 1).unsqueeze(0).to(device)
 
         with torch.no_grad():
             ws = G.mapping(z, input_pose, {'mask': input_label, 'pose': input_pose})
             out = G.synthesis(ws, input_pose, noise_mode='const', neural_rendering_resolution=neural_rendering_resolution)
             
         image_color = ((out['image'][0].permute(1, 2, 0).cpu().numpy().clip(-1, 1) + 1) * 127.5).astype(np.uint8)
-        image_seg = color_mask(torch.argmax(out['semantic'][0], dim=0).cpu().numpy()).astype(np.uint8)
+        if args.cfg == 'seg2cat' or args.cfg == 'seg2face':
+            image_label = color_mask(torch.argmax(out['semantic'][0], dim=0).cpu().numpy()).astype(np.uint8)
+        elif args.cfg == 'edge2car':
+            image_label = ((out['semantic'][0].cpu().numpy() + 1) * 127.5).clip(0, 255).astype(np.uint8)[0]
 
         PIL.Image.fromarray(image_color).save(save_dir / f'{args.cfg}_{args.input_id}_{seed}_color.png')
-        PIL.Image.fromarray(image_seg).save(save_dir / f'{args.cfg}_{args.input_id}_{seed}_label.png')
+        PIL.Image.fromarray(image_label).save(save_dir / f'{args.cfg}_{args.input_id}_{seed}_label.png')
 
 
 
