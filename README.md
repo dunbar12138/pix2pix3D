@@ -71,7 +71,7 @@ For example:
 
 You can get the results above by running:
 ```
-python applications/generate_samples.py --network checkpoints/pix2pix3d_seg2car.pkl --outdir examples --random_seed 1 --cfg seg2cat --input_id 1666
+python applications/generate_samples.py --network checkpoints/pix2pix3d_seg2cat.pkl --outdir examples --random_seed 1 --cfg seg2cat --input_id 1666
 ```
 
 #### Render Videos
@@ -87,7 +87,7 @@ For example:
 
 You can get the results above using the following command: 
 ```
-python applications/generate_video.py --network checkpoints/pix2pix3d_seg2car.pkl --outdir examples --random_seed 1 --cfg seg2cat --input examples/example_input.png
+python applications/generate_video.py --network checkpoints/pix2pix3d_seg2cat.pkl --outdir examples --random_seed 1 --cfg seg2cat --input examples/example_input.png
 ```
 
 #### Extract Semantic Mesh
@@ -100,7 +100,7 @@ For example:
 
 You can get the results above with the following command:
 ```
-python applications/extract_mesh.py --network checkpoints/pix2pix3d_seg2car.pkl --outdir examples --cfg seg2cat --input examples/example_input.png
+python applications/extract_mesh.py --network checkpoints/pix2pix3d_seg2cat.pkl --outdir examples --cfg seg2cat --input examples/example_input.png
 ```
 
 <!-- #### Interpolation -->
