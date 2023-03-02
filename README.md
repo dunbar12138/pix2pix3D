@@ -121,10 +121,10 @@ Code is coming soon.
 
 If you find this repository useful for your research, please cite the following work.
 ```
-@article{kangle2023pix2pix3d,
+@inproceedings{kangle2023pix2pix3d,
   title={3D-aware Conditional Image Synthesis},
   author={Deng, Kangle and Yang, Gengshan and Ramanan, Deva and Zhu, Jun-Yan},
-  journal = {CVPR},
+  booktitle = {CVPR},
   year = {2023}
 }
 ```
