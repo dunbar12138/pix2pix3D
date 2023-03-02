@@ -10,7 +10,7 @@ https://user-images.githubusercontent.com/28395429/219509580-650c19d1-0c63-4811-
 
 [3D-aware Conditional Image Synthesis](https://arxiv.org/abs/2302.08509)
 
-ArXiv, 2023
+CVPR 2023
 
  [Kangle Deng](https://dunbar12138.github.io/),
  [Gengshan Yang](https://gengshan-y.github.io/),
@@ -124,7 +124,7 @@ If you find this repository useful for your research, please cite the following 
 @article{kangle2023pix2pix3d,
   title={3D-aware Conditional Image Synthesis},
   author={Deng, Kangle and Yang, Gengshan and Ramanan, Deva and Zhu, Jun-Yan},
-  journal = {arXiv},
+  journal = {CVPR},
   year = {2023}
 }
 ```
