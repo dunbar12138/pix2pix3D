@@ -6,7 +6,8 @@
 
 This is the official PyTorch implementation of "3D-aware Conditional Image Synthesis". Pix2pix3D synthesizes 3D objects (neural fields) given a 2D label map, such as a segmentation or edge map. We also provide an interactive 3D editing demo. 
 
-https://user-images.githubusercontent.com/28395429/219509580-650c19d1-0c63-4811-b492-e106ca3a9478.mp4
+https://user-images.githubusercontent.com/28395429/222578030-8bb2c727-397e-44b6-9ab1-9b0b09dd3b5b.mp4
+
 
 [3D-aware Conditional Image Synthesis](https://arxiv.org/abs/2302.08509)
 
