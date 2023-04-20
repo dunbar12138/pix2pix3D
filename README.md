@@ -112,8 +112,45 @@ You can also launch an interactive demo of 3D editing.
 
 ### Training
 
-Code is coming soon.
+We provide an example training script at `train_scripts/afhq_seg.sh`:
+```
+python train.py --outdir=<log_dir> \
+                --cfg=afhq --data=data/afhq_v2_train_cat_512.zip \
+                --mask_data=data/afhqcat_seg_6c.zip \
+                --data_type=seg --semantic_channels=6 \ 
+                --render_mask=True --dis_mask=True \ 
+                --neural_rendering_resolution_initial=128 \
+                --resume=<EG3D-checkpoints>/afhqcats512-128.pkl \
+                --gpus=2 --batch=4 --mbstd-group=2 \ 
+                --gamma=5 --gen_pose_cond=True \ 
+                --random_c_prob=0.5 \
+                --lambda_d_semantic=0.1 \
+                --lambda_lpips=1 \
+                --lambda_cross_view=1e-4 \
+                --only_raw_recons=True \
+                --wandb_log=False
+```
+Training parameters:
+- `outdir`: The directory to save checkpoints and logs.
+- `cfg`: Choose from [afhq, celeba, shapenet]. 
+- `data`: RGB data file.
+- `mask_data`: label map data file.
+- `data_type`: Choose from [seg, edge]. Specify the `semantic_channels` if using `seg`.
+- `render_mask`: Whether to render label maps along with RGB.
+- `dis_mask`: Whether to use a GAN loss on rendered label maps.
+- `neural_rendering_resolution_initial`: The resolution of NeRF outputs.
+- `resume`: We partially initialize our network with EG3D pretrained checkpoints (download [here](https://catalog.ngc.nvidia.com/orgs/nvidia/teams/research/models/eg3d)).
+- `gpus`, `batch`, `mbstd-group`: Parameters for batch size and multi-gpu training.
+- `gen_pose_cond`: Whether to condition the generation on camera poses.
+- `random_c_prob`: Probablity of sampling random poses for training.
+- `lambda_d_semantic`: The weight of GAN loss on label maps.
+- `lambda_lpips`: The weight of RGB LPIPS loss.
+- `lambda_cross_view`: The weight of cross-view consistency loss.
+- `wandb_log`: Whether to use wandb log.
 
+### Prepare your own dataset
+
+We follow the dataset format of EG3D [here](https://github.com/NVlabs/eg3d#preparing-datasets). You can obtain the segmentation masks of your own dataset by [DINO clustering](https://github.com/ShirAmir/dino-vit-features/blob/main/part_cosegmentation.py), and obtain the edge map by [pidinet](https://github.com/hellozhuo/pidinet) and [informative drawing](https://github.com/carolineec/informative-drawings).
 
 ---
 
