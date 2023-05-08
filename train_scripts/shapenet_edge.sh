@@ -1,0 +1,14 @@
+NCCL_P2P_DISABLE=1 python train.py --outdir=logs \
+                            --cfg=shapenet --data=data/cars_128.zip \
+                            --mask_data=data/shapenet_car_contour.zip \
+                            --data_type=edge \
+                            --render_mask=True --dis_mask=True \
+                            --resume=ckpts/shapenetcars128-64.pkl \
+                            --gpus=8 --batch=32 --mbstd-group=4 \
+                            --gamma=0.3 \
+                            --random_c_prob=0.5 \
+                            --lambda_d_semantic=0.1 \
+                            --lambda_lpips=1 \
+                            --lambda_cross_view=1e-6 \
+                            --edge_weight=10 --geometry_layer=9 \
+                            --wandb_log=False 

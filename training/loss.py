@@ -660,8 +660,11 @@ class Pix2Pix3DLoss(Loss):
                 gen_img, _gen_ws = self.run_G(gen_z, gen_c, batch, swapping_prob=swapping_prob,
                                               neural_rendering_resolution=neural_rendering_resolution, mode='random_z_random_c')
             batch_proj = batch.copy()
-            batch_proj['mask'] = torch.argmax(
-                gen_img['semantic'].detach(), dim=1, keepdim=True)
+            if self.G.data_type == 'seg':
+                batch_proj['mask'] = torch.argmax(
+                    gen_img['semantic'].detach(), dim=1, keepdim=True)
+            else:
+                batch_proj['mask'] = gen_img['semantic'].detach()
             gen_img_proj, gen_ws_proj = self.run_G(gen_z, gen_c, batch_proj, swapping_prob=swapping_prob,
                                                    neural_rendering_resolution=neural_rendering_resolution, mode='random_z_image_c')
             with torch.no_grad():
