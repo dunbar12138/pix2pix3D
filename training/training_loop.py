@@ -147,7 +147,7 @@ def get_image_grid(img, drange, grid_size):
 
 #----------------------------------------------------------------------------
 
-def log_table(G_ema, grid_z, grid_i, grid_c, grid_m, grid_p, mask_type, global_step, device, wandb):
+def log_table(G_ema, grid_z, grid_i, grid_c, grid_m, grid_p, mask_type, global_step, device, wandb_log):
     max_rounds = 16
     
     images_all = []
@@ -201,26 +201,27 @@ def log_table(G_ema, grid_z, grid_i, grid_c, grid_m, grid_p, mask_type, global_s
     else:
         columns = ["Real Image", "Mask", "Generated_ema"]
 
-    table = wandb.Table(columns=columns)
+    if wandb_log:
+        table = wandb.Table(columns=columns)
 
-    for row in range(images_all.shape[1]):
-        g_img_ema = wandb.Image(images_all[:,row].clamp(-1,1))
-        r_img = wandb.Image(grid_i_all[row])
-        if mask_type == 'seg':
-            r_mask = wandb.Image(color_mask(grid_m_all[row].squeeze(0).cpu()))
-        else:
-            r_mask = wandb.Image(grid_m_all[row].squeeze(0).cpu().numpy())
-        if len(segs_all) > 0:
-            g_mask = segs_all[:,row] # 6 x 512 x 512
+        for row in range(images_all.shape[1]):
+            g_img_ema = wandb.Image(images_all[:,row].clamp(-1,1))
+            r_img = wandb.Image(grid_i_all[row])
             if mask_type == 'seg':
-                g_mask = torch.tensor(color_mask(g_mask.cpu()).transpose(0,3,1,2))
+                r_mask = wandb.Image(color_mask(grid_m_all[row].squeeze(0).cpu()))
             else:
-                g_mask = torch.tensor(g_mask.cpu().numpy().clip(-1, 1))
-            g_mask = wandb.Image(g_mask)
-            table.add_data(r_img, r_mask, g_img_ema, g_mask)
-        else:
-            table.add_data(r_img, r_mask, g_img_ema)
-    wandb.log({"Visualize": table}, step=global_step)
+                r_mask = wandb.Image(grid_m_all[row].squeeze(0).cpu().numpy())
+            if len(segs_all) > 0:
+                g_mask = segs_all[:,row] # 6 x 512 x 512
+                if mask_type == 'seg':
+                    g_mask = torch.tensor(color_mask(g_mask.cpu()).transpose(0,3,1,2))
+                else:
+                    g_mask = torch.tensor(g_mask.cpu().numpy().clip(-1, 1))
+                g_mask = wandb.Image(g_mask)
+                table.add_data(r_img, r_mask, g_img_ema, g_mask)
+            else:
+                table.add_data(r_img, r_mask, g_img_ema)
+        wandb.log({"Visualize": table}, step=global_step)
     del images_all, grid_i_all, grid_m_all, segs_all
 
 
@@ -687,7 +688,7 @@ def training_loop(
 
             #--------------------
             # Log Multi-view images.
-            log_table(G_ema, grid_z, grid_i, grid_c, grid_m, grid_p, mask_type=training_set_kwargs.data_type, global_step=cur_nimg//1000, device=device, wandb=wandb)
+            log_table(G_ema, grid_z, grid_i, grid_c, grid_m, grid_p, mask_type=training_set_kwargs.data_type, global_step=cur_nimg//1000, device=device, wandb_log=wandb_log)
 
 
 
